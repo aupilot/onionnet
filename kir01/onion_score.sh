@@ -1,3 +1,5 @@
+#!/bin/bash
+
 DECOY=$1
 
 cd /opt/var/ || exit
