@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+import time
 
 import numpy as np
 import pandas as pd
@@ -216,19 +217,38 @@ def generate_features(complex_fn, lig_code, ncutoffs):
             onion_counts.append(cplx.counts_ - counts[-1])
         counts.append(cplx.counts_)
 
-    results = []
+    # ==kir== replaced with multithread to speed up!
+    if args.nt == 0:
+        pool = mp.Pool()
+    else:
+        pool = mp.Pool(args.nt)
+    _args = list(zip([rec_lig_element_combines for i in onion_counts], [keys for i in onion_counts], onion_counts))
+    results_all = pool.map(ssum, _args)
+    results = np.array(results_all).flatten()
 
-    for n in range(len(ncutoffs)):
-        # count_dict = dict.fromkeys(keys, 0.0)
-        d = OrderedDict()
-        d = d.fromkeys(keys, 0.0)
-        # now sort the atom-pairs and accumulate the element-type to a dict
-        for e_e, c in zip(rec_lig_element_combines, onion_counts[n]):
-            d[e_e] += c
-
-        results += d.values()
+    # results = []
+    # for n in range(len(ncutoffs)):
+    #     # count_dict = dict.fromkeys(keys, 0.0)
+    #     d = OrderedDict()
+    #     d = d.fromkeys(keys, 0.0)
+    #     # ttt = time.time()
+    #     # now sort the atom-pairs and accumulate the element-type to a dict
+    #     for e_e, c in zip(rec_lig_element_combines, onion_counts[n]):
+    #         d[e_e] += c
+    #     # ttt = time.time() - ttt
+    #     results += d.values()
 
     return results, keys
+
+
+def ssum(args):
+    rle_comb, keys, onion_cnt = args
+    d = OrderedDict()
+    d = d.fromkeys(keys, 0.0)
+    # now sort the atom-pairs and accumulate the element-type to a dict
+    for e_e, c in zip(rle_comb, onion_cnt):
+        d[e_e] += c
+    return np.array(list(d.values()))
 
 
 def genfeat_mp(args):
@@ -277,7 +297,7 @@ if __name__ == "__main__":
                         help="Input, optional. Default is LIG. \n"
                              "The ligand molecule residue name (code, 3 characters) in the \n"
                              "complex pdb file. ")
-    parser.add_argument("-nt", type=int, default=1, help="Input, optional. Default is 1. Use how many of cpu cores.")
+    parser.add_argument("-nt", type=int, default=0, help="Number of cpu cores. Default is 0 - use all avail CPUs.")
 
 
     args = parser.parse_args()
@@ -301,7 +321,9 @@ if __name__ == "__main__":
     # computing the features now ...
     l = len(inputs)
     lig_code = args.lig
-    if args.nt <= 1:
+    # ==kir== we don't want multithred on files, we always have one file
+    if True:
+    # if args.nt <= 1:
         for i, fn in enumerate(inputs):
             # the main function for featurization ...
             r, ele_pairs = generate_features(fn, lig_code, n_cutoffs)
