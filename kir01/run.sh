@@ -8,4 +8,4 @@ DECOY=e_dec_0.94.pdb
 python prep_complex.py $DECOY
 python ../generate_features.py -nt 0 -inp input.dat -out features.csv
 python ../predict.py -fn  features.csv -out predicted.csv -weights ../../models/CNN_final_model_weights.h5 -scaler ../../models/StandardScaler.model
-cat predicted.csv
+#cat predicted.csv

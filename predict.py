@@ -206,7 +206,7 @@ if __name__ == "__main__":
         Xs = None
         sys.exit(0)
 
-    print("DataSet Loaded ... ... ")
+    # print("DataSet Loaded ... ... ")
 
     # the dataset shape 60 layers with 64 atom-type combinations
     Xtest = Xs.values.reshape((-1, 64, 60, 1))
@@ -216,11 +216,12 @@ if __name__ == "__main__":
     model.load_weights(args.weights)
 
     ypred = pd.DataFrame(index=Xs.index)
-    ypred['pKa_predicted'] = model.predict(Xtest).ravel()
-    ypred.to_csv(args.out, header=True, index=True, float_format="%.3f", sep=',')
-    print("pKa Predicted ... ...")
 
-    if ytest is not None:
-        print("PCC : %.3f" % pcc(ypred['pKa_predicted'].values, np.array(ytest)))
-        print("RMSE: %.3f" % rmse(ypred['pKa_predicted'].values, np.array(ytest)))
+    ypred['pKa_predicted'] = model.predict(Xtest).ravel()
+    # ypred.to_csv(args.out, header=True, index=True, float_format="%.3f", sep=',')
+    print(f"pKa {float(ypred['pKa_predicted'].values)}")
+
+    # if ytest is not None:
+        # print("PCC : %.3f" % pcc(ypred['pKa_predicted'].values, np.array(ytest)))
+        # print("RMSE: %.3f" % rmse(ypred['pKa_predicted'].values, np.array(ytest)))
 
